@@ -82,4 +82,29 @@ router.patch('/tasks/:id', validate(['status']), async (req: Request, res: Respo
   }
 });
 
+// DELETE /tasks/:id — delete a task
+router.delete('/tasks/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (isNaN(Number(id))) {
+    return res.status(400).json({ error: 'Task id must be a number' });
+  }
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM tasks WHERE id = $1 RETURNING *`,
+      [Number(id)]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `Task with id ${id} not found` });
+    }
+
+    return res.status(200).json({ message: 'Task deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting task:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

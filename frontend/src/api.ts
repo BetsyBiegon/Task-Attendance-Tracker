@@ -13,6 +13,7 @@ export interface Task {
   title: string;
   description?: string;
   status: 'To Do' | 'In Progress' | 'Done';
+  created_at?: string;
 }
 
 export const api = {
@@ -66,5 +67,12 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to update task');
     return res.json();
-  }
+  },
+
+  deleteTask: async (id: number): Promise<void> => {
+    const res = await fetch(`${BASE_URL}/tasks/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete task');
+  },
 };
