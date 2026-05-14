@@ -3,11 +3,11 @@ import pool from '../db/pool';
 
 const router = Router();
 
-const VALID_STATUSES = ['TODO', 'IN_PROGRESS', 'DONE'];
+const VALID_STATUSES = ['To Do', 'In Progress', 'Done'];
 
 // POST /tasks — create a new task
 router.post('/tasks', async (req: Request, res: Response) => {
-  const { title, description = '', status = 'TODO' } = req.body;
+  const { title, description = '', status = 'To Do' } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'title is required' });

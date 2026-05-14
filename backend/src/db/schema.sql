@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id          SERIAL PRIMARY KEY,
   title       VARCHAR(255) NOT NULL,
   description TEXT,
-  status      VARCHAR(20) CHECK (status IN ('TODO', 'IN_PROGRESS', 'DONE')) DEFAULT 'TODO',
+  status      VARCHAR(20) CHECK (status IN ('To Do', 'In Progress', 'Done')) DEFAULT 'To Do',
   created_at  TIMESTAMP DEFAULT NOW(),
   updated_at  TIMESTAMP DEFAULT NOW()
 );
