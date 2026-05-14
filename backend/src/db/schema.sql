@@ -3,9 +3,9 @@
 
 CREATE TABLE IF NOT EXISTS checkins (
   id          SERIAL PRIMARY KEY,
-  date        DATE NOT NULL,
-  time        TIME NOT NULL,
-  mode        VARCHAR(10) CHECK (mode IN ('remote', 'physical')) NOT NULL,
+  user_id     VARCHAR(255) NOT NULL,
+  status      VARCHAR(20) DEFAULT 'PRESENT',
+  timestamp   TIMESTAMP DEFAULT NOW(),
   created_at  TIMESTAMP DEFAULT NOW()
 );
 
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   id          SERIAL PRIMARY KEY,
   title       VARCHAR(255) NOT NULL,
   description TEXT,
-  status      VARCHAR(20) CHECK (status IN ('To Do', 'In Progress', 'Done')) DEFAULT 'To Do',
+  status      VARCHAR(20) CHECK (status IN ('TODO', 'IN_PROGRESS', 'DONE')) DEFAULT 'TODO',
   created_at  TIMESTAMP DEFAULT NOW(),
   updated_at  TIMESTAMP DEFAULT NOW()
 );
