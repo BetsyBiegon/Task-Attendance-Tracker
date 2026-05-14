@@ -4,34 +4,33 @@ import { validate } from '../middleware/validate';
 
 const router = Router();
 
-const VALID_STATUSES = ['PRESENT', 'ABSENT', 'LATE'];
+const VALID_MODES = ['remote', 'physical'];
 
 // POST /checkin — record a new check-in
-router.post('/checkin', validate(['userId']), async (req: Request, res: Response) => {
-  const { userId, status = 'PRESENT' } = req.body;
+router.post('/checkin', validate(['userId', 'mode']), async (req: Request, res: Response) => {
+  const { userId, mode, status = 'PRESENT' } = req.body;
 
-  // Validate userId is a non-empty string
   if (typeof userId !== 'string' || userId.trim().length === 0) {
     return res.status(400).json({ error: 'userId must be a non-empty string' });
   }
 
-  // Validate status value
-  if (!VALID_STATUSES.includes(status)) {
+  if (!VALID_MODES.includes(mode)) {
     return res.status(400).json({
-      error: `status must be one of: ${VALID_STATUSES.join(', ')}`,
+      error: `mode must be one of: ${VALID_MODES.join(', ')}`,
     });
   }
 
   try {
     const result = await pool.query(
-      `INSERT INTO checkins (user_id, status) VALUES ($1, $2) RETURNING *`,
-      [userId.trim(), status]
+      `INSERT INTO checkins (user_id, mode, status) VALUES ($1, $2, $3) RETURNING *`,
+      [userId.trim(), mode, status]
     );
 
     const row = result.rows[0];
     return res.status(201).json({
       id: row.id,
       userId: row.user_id,
+      mode: row.mode,
       status: row.status,
       timestamp: row.timestamp,
     });
@@ -45,12 +44,13 @@ router.post('/checkin', validate(['userId']), async (req: Request, res: Response
 router.get('/checkins', async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      `SELECT id, user_id, status, timestamp FROM checkins ORDER BY timestamp DESC`
+      `SELECT id, user_id, mode, status, timestamp FROM checkins ORDER BY timestamp DESC`
     );
 
     const checkins = result.rows.map((row) => ({
       id: row.id,
       userId: row.user_id,
+      mode: row.mode,
       status: row.status,
       timestamp: row.timestamp,
     }));

@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS checkins (
   id          SERIAL PRIMARY KEY,
   user_id     VARCHAR(255) NOT NULL,
+  mode        VARCHAR(10) CHECK (mode IN ('remote', 'physical')) DEFAULT 'remote',
   status      VARCHAR(20) DEFAULT 'PRESENT',
   timestamp   TIMESTAMP DEFAULT NOW(),
   created_at  TIMESTAMP DEFAULT NOW()

@@ -3,6 +3,7 @@ const BASE_URL = 'http://localhost:3000';
 export interface CheckIn {
   id?: number;
   userId: string;
+  mode?: 'remote' | 'physical';
   timestamp?: string;
   status?: string;
 }

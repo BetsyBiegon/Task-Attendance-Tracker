@@ -22,7 +22,7 @@ const Header: React.FC = () => {
     <header className="glass-panel flex-between" style={{ marginBottom: '2rem' }}>
       <div>
         <h2 style={{ margin: 0 }}>Task & Attendance Tracker</h2>
-        <p className="text-muted" style={{ fontSize: '0.875rem' }}>Intern Boilerplate Project</p>
+
       </div>
       <div className="flex-between">
         <span className={`status-indicator ${status === 'Online' ? 'online' : 'offline'}`}></span>
