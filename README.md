@@ -4,8 +4,8 @@ A full-stack web application for tracking daily attendance and managing tasks. B
 
 ## Live Demo
 
-- Frontend: _coming soon_
-- Backend API: _coming soon_
+- Frontend: https://task-attendance-tracker-26vl.vercel.app
+- Backend API: https://task-attendance-tracker-api.onrender.com
 
 ## Tech Stack
 
