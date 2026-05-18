@@ -19,6 +19,23 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'Server is running' });
 });
 
+// Root
+app.get('/', (_req: Request, res: Response) => {
+  res.json({
+    name: 'Task & Attendance Tracker API',
+    status: 'running',
+    endpoints: [
+      'GET  /health',
+      'POST /checkin',
+      'GET  /checkins',
+      'POST /tasks',
+      'GET  /tasks',
+      'PATCH /tasks/:id',
+      'DELETE /tasks/:id',
+    ],
+  });
+});
+
 // Routes
 app.use(checkinRoutes);
 app.use(taskRoutes);
