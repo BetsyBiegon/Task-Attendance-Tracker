@@ -2,30 +2,39 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+// Load environment variables from .env file
 dotenv.config();
 
+// Initialize database connection pool
 import './db/pool';
+
+import authRoutes from './routes/auth';
 import checkinRoutes from './routes/checkins';
 import taskRoutes from './routes/tasks';
+import { requireAuth } from './middleware/auth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Allow requests from the frontend origin
 app.use(cors());
+
+// Parse incoming JSON request bodies
 app.use(express.json());
 
-// Health check
+// Public routes — no authentication required
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'Server is running' });
 });
 
-// Root
 app.get('/', (_req: Request, res: Response) => {
   res.json({
     name: 'Task & Attendance Tracker API',
     status: 'running',
     endpoints: [
       'GET  /health',
+      'POST /auth/register',
+      'POST /auth/login',
       'POST /checkin',
       'GET  /checkins',
       'POST /tasks',
@@ -36,9 +45,12 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
-// Routes
-app.use(checkinRoutes);
-app.use(taskRoutes);
+// Auth routes — register and login
+app.use(authRoutes);
+
+// Protected routes — require a valid JWT token
+app.use(requireAuth, checkinRoutes);
+app.use(requireAuth, taskRoutes);
 
 // 404 handler — catches requests to routes that don't exist
 app.use((_req: Request, res: Response) => {
@@ -46,7 +58,6 @@ app.use((_req: Request, res: Response) => {
 });
 
 // Global error handler — catches any unhandled errors thrown in routes
-// Must have 4 parameters for Express to recognize it as an error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled error:', err.message);
   res.status(500).json({ error: 'Something went wrong' });
