@@ -23,6 +23,9 @@ export interface Task {
   title: string;
   description?: string;
   status: 'To Do' | 'In Progress' | 'Done';
+  assigned_to?: number | null;
+  assigned_to_name?: string;
+  team_id?: number | null;
   created_at?: string;
 }
 
@@ -104,7 +107,7 @@ export const api = {
     return res.json();
   },
 
-  // Update a task's status (protected)
+  // Update a task's status and/or assignment (protected)
   updateTask: async (id: number, data: Partial<Task>): Promise<Task> => {
     const res = await fetch(`${BASE_URL}/tasks/${id}`, {
       method: 'PATCH',
