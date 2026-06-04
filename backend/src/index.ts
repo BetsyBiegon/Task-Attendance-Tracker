@@ -11,6 +11,7 @@ import './db/pool';
 import authRoutes from './routes/auth';
 import checkinRoutes from './routes/checkins';
 import taskRoutes from './routes/tasks';
+import teamRoutes from './routes/teams';
 import { requireAuth } from './middleware/auth';
 
 const app = express();
@@ -47,6 +48,9 @@ app.get('/', (_req: Request, res: Response) => {
 
 // Auth routes — register and login
 app.use(authRoutes);
+
+// Teams routes — all internally protected per route
+app.use(teamRoutes);
 
 // Protected routes — require a valid JWT token
 app.use(requireAuth, checkinRoutes);

@@ -123,4 +123,60 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to delete task');
   },
+
+  // Create a new team
+  createTeam: async (name: string) => {
+    const res = await fetch(`${BASE_URL}/teams`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create team');
+    return data;
+  },
+
+  // Get all teams the logged-in user belongs to
+  getTeams: async () => {
+    const res = await fetch(`${BASE_URL}/teams`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch teams');
+    return res.json();
+  },
+
+  // Get all members of a specific team
+  getTeamMembers: async (teamId: number) => {
+    const res = await fetch(`${BASE_URL}/teams/${teamId}/members`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch team members');
+    return res.json();
+  },
+
+  // Invite a user to a team by email
+  inviteToTeam: async (teamId: number, email: string) => {
+    const res = await fetch(`${BASE_URL}/teams/${teamId}/invite`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to send invite');
+    return data;
+  },
+
+  // Accept a pending team invite
+  acceptInvite: async (inviteId: number) => {
+    const res = await fetch(`${BASE_URL}/teams/invites/${inviteId}/accept`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to accept invite');
+    return data;
+  },
+
+  // Get all pending invites for the logged-in user
+  getPendingInvites: async () => {
+    const res = await fetch(`${BASE_URL}/teams/invites/pending`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch invites');
+    return res.json();
+  },
 };
