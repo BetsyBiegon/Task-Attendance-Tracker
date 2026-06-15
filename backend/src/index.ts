@@ -12,6 +12,7 @@ import authRoutes from './routes/auth';
 import checkinRoutes from './routes/checkins';
 import taskRoutes from './routes/tasks';
 import teamRoutes from './routes/teams';
+import uploadRoutes from './routes/upload';
 import { requireAuth } from './middleware/auth';
 
 const app = express();
@@ -51,6 +52,9 @@ app.use(authRoutes);
 
 // Teams routes — all internally protected per route
 app.use(teamRoutes);
+
+// Upload routes — bulk create tasks and check-ins from CSV/Excel
+app.use(uploadRoutes);
 
 // Protected routes — require a valid JWT token
 app.use(requireAuth, checkinRoutes);

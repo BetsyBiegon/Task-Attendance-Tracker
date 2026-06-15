@@ -4,12 +4,13 @@ import AttendancePanel from './components/AttendancePanel';
 import TaskBoard from './components/TaskBoard';
 import Teams from './pages/Teams';
 import MyTasks from './pages/MyTasks';
+import BulkUpload from './pages/BulkUpload';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import './index.css';
 
 type AuthPage = 'login' | 'register';
-type ActiveTab = 'dashboard' | 'teams' | 'mytasks';
+type ActiveTab = 'dashboard' | 'teams' | 'mytasks' | 'upload';
 
 interface User {
   id: number;
@@ -79,6 +80,13 @@ const App: React.FC = () => {
         >
           My Tasks
         </button>
+        <button
+          className="btn"
+          onClick={() => setActiveTab('upload')}
+          style={{ opacity: activeTab === 'upload' ? 1 : 0.5 }}
+        >
+          Bulk Upload
+        </button>
       </div>
 
       {/* Render active tab content */}
@@ -89,8 +97,10 @@ const App: React.FC = () => {
         </main>
       ) : activeTab === 'teams' ? (
         <Teams />
-      ) : (
+      ) : activeTab === 'mytasks' ? (
         <MyTasks />
+      ) : (
+        <BulkUpload />
       )}
     </div>
   );
