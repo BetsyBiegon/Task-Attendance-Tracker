@@ -3,12 +3,13 @@ import Header from './components/Header';
 import AttendancePanel from './components/AttendancePanel';
 import TaskBoard from './components/TaskBoard';
 import Teams from './pages/Teams';
+import MyTasks from './pages/MyTasks';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import './index.css';
 
 type AuthPage = 'login' | 'register';
-type ActiveTab = 'dashboard' | 'teams';
+type ActiveTab = 'dashboard' | 'teams' | 'mytasks';
 
 interface User {
   id: number;
@@ -71,6 +72,13 @@ const App: React.FC = () => {
         >
           Teams
         </button>
+        <button
+          className="btn"
+          onClick={() => setActiveTab('mytasks')}
+          style={{ opacity: activeTab === 'mytasks' ? 1 : 0.5 }}
+        >
+          My Tasks
+        </button>
       </div>
 
       {/* Render active tab content */}
@@ -79,8 +87,10 @@ const App: React.FC = () => {
           <AttendancePanel />
           <TaskBoard />
         </main>
-      ) : (
+      ) : activeTab === 'teams' ? (
         <Teams />
+      ) : (
+        <MyTasks />
       )}
     </div>
   );

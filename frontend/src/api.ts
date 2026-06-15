@@ -89,6 +89,13 @@ export const api = {
     return res.json();
   },
 
+  // Fetch only tasks assigned to the logged-in user (protected)
+  getMyTasks: async (): Promise<Task[]> => {
+    const res = await fetch(`${BASE_URL}/tasks/my`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch my tasks');
+    return res.json();
+  },
+
   // Fetch all tasks (protected)
   getTasks: async (): Promise<Task[]> => {
     const res = await fetch(`${BASE_URL}/tasks`, { headers: authHeaders() });

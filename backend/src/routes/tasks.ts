@@ -35,6 +35,26 @@ router.post('/tasks', requireAuth, validate(['title']), async (req: AuthRequest,
   }
 });
 
+// GET /tasks/my — fetch only tasks assigned to the logged-in user
+router.get('/tasks/my', requireAuth, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.userId;
+
+  try {
+    const result = await pool.query(
+      `SELECT t.*, u.name AS assigned_to_name
+       FROM tasks t
+       LEFT JOIN users u ON t.assigned_to = u.id
+       WHERE t.assigned_to = $1
+       ORDER BY t.created_at DESC`,
+      [userId]
+    );
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching my tasks:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /tasks — fetch all tasks, with optional team filter (?team_id=1)
 router.get('/tasks', requireAuth, async (req: AuthRequest, res: Response) => {
   const { team_id } = req.query;
