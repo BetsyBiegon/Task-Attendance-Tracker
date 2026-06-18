@@ -47,6 +47,13 @@ export const api = {
     }
   },
 
+  // Get all users (for assignee dropdown)
+  getUsers: async (): Promise<User[]> => {
+    const res = await fetch(`${BASE_URL}/users`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch users');
+    return res.json();
+  },
+
   // Register a new user account
   register: async (name: string, email: string, password: string) => {
     const res = await fetch(`${BASE_URL}/auth/register`, {

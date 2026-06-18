@@ -21,7 +21,7 @@ const TaskBoard: React.FC = () => {
   const [assignedTo, setAssignedTo] = useState<number | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [allUsers, setAllUsers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -45,10 +45,14 @@ const TaskBoard: React.FC = () => {
 
   const loadTeams = async () => {
     try {
-      const data = await api.getTeams();
-      setTeams(data);
+      const [teamsData, usersData] = await Promise.all([
+        api.getTeams(),
+        api.getUsers(),
+      ]);
+      setTeams(teamsData);
+      setAllUsers(usersData);
     } catch {
-      // silently fail — user may not be in any teams
+      // silently fail
     }
   };
 
@@ -57,19 +61,9 @@ const TaskBoard: React.FC = () => {
     loadTeams();
   }, []);
 
-  // When a team is selected, load its members for the assign dropdown
-  const handleTeamChange = async (teamId: number | null) => {
+  // When a team is selected, just update the team ID
+  const handleTeamChange = (teamId: number | null) => {
     setSelectedTeamId(teamId);
-    setAssignedTo(null);
-    setMembers([]);
-    if (teamId) {
-      try {
-        const data = await api.getTeamMembers(teamId);
-        setMembers(data);
-      } catch {
-        showMessage('Failed to load team members', 'error');
-      }
-    }
   };
 
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -157,10 +151,21 @@ const TaskBoard: React.FC = () => {
               style={{ flex: 3, marginBottom: 0 }} />
           </div>
 
-          {/* Team and assignee selection */}
-          {teams.length > 0 && (
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              {/* Team selector */}
+          {/* Assign to any user directly */}
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <select
+              value={assignedTo ?? ''}
+              onChange={(e) => setAssignedTo(e.target.value ? Number(e.target.value) : null)}
+              style={{ flex: 1, marginBottom: 0 }}
+            >
+              <option value="">Assign to (optional)</option>
+              {allUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.name} — {u.email}</option>
+              ))}
+            </select>
+
+            {/* Team selector (optional) */}
+            {teams.length > 0 && (
               <select
                 value={selectedTeamId ?? ''}
                 onChange={(e) => handleTeamChange(e.target.value ? Number(e.target.value) : null)}
@@ -171,22 +176,8 @@ const TaskBoard: React.FC = () => {
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
-
-              {/* Assignee selector — only shows when a team is selected */}
-              {selectedTeamId && (
-                <select
-                  value={assignedTo ?? ''}
-                  onChange={(e) => setAssignedTo(e.target.value ? Number(e.target.value) : null)}
-                  style={{ flex: 1, marginBottom: 0 }}
-                >
-                  <option value="">Unassigned</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           <button type="submit" className="btn" style={{ width: '100%' }} disabled={submitting}>
             {submitting ? 'Adding...' : 'Add Task'}

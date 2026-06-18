@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import pool from '../db/pool';
 import { validate } from '../middleware/validate';
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -88,6 +89,19 @@ router.post('/auth/login', validate(['email', 'password']), async (req: Request,
     });
   } catch (err) {
     console.error('Error logging in:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /users — fetch all users (for assignee dropdown)
+router.get('/users', requireAuth, async (_req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, name, email FROM users ORDER BY name ASC`
+    );
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching users:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
