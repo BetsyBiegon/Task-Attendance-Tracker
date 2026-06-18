@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { api, Task } from '../api';
 
-// The three Kanban columns in order
 const STATUSES: Task['status'][] = ['To Do', 'In Progress', 'Done'];
+
+interface Member {
+  id: number;
+  name: string;
+  email: string;
+}
+
+interface Team {
+  id: number;
+  name: string;
+}
 
 const TaskBoard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [assignedTo, setAssignedTo] = useState<number | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -17,7 +31,7 @@ const TaskBoard: React.FC = () => {
     setTimeout(() => setMessage(null), 3000);
   };
 
-  // Fetch all tasks from the backend
+  // Load tasks and user's teams on mount
   const loadTasks = async () => {
     try {
       const data = await api.getTasks();
@@ -29,19 +43,50 @@ const TaskBoard: React.FC = () => {
     }
   };
 
+  const loadTeams = async () => {
+    try {
+      const data = await api.getTeams();
+      setTeams(data);
+    } catch {
+      // silently fail — user may not be in any teams
+    }
+  };
+
   useEffect(() => {
     loadTasks();
+    loadTeams();
   }, []);
 
-  // Handle task creation form submission
+  // When a team is selected, load its members for the assign dropdown
+  const handleTeamChange = async (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    setAssignedTo(null);
+    setMembers([]);
+    if (teamId) {
+      try {
+        const data = await api.getTeamMembers(teamId);
+        setMembers(data);
+      } catch {
+        showMessage('Failed to load team members', 'error');
+      }
+    }
+  };
+
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
     setSubmitting(true);
     try {
-      await api.createTask({ title, description, status: 'To Do' });
+      await api.createTask({
+        title,
+        description,
+        status: 'To Do',
+        assigned_to: assignedTo,
+        team_id: selectedTeamId,
+      });
       setTitle('');
       setDescription('');
+      setAssignedTo(null);
       showMessage('Task created successfully', 'success');
       loadTasks();
     } catch {
@@ -51,7 +96,6 @@ const TaskBoard: React.FC = () => {
     }
   };
 
-  // Update a task's status
   const handleStatusChange = async (id: number, newStatus: Task['status']) => {
     try {
       await api.updateTask(id, { status: newStatus });
@@ -61,7 +105,6 @@ const TaskBoard: React.FC = () => {
     }
   };
 
-  // Delete a task permanently
   const handleDelete = async (id: number) => {
     try {
       await api.deleteTask(id);
@@ -72,7 +115,6 @@ const TaskBoard: React.FC = () => {
     }
   };
 
-  // Filter tasks by status for each Kanban column
   const getTasksByStatus = (status: Task['status']) =>
     tasks.filter((t) => t.status === status);
 
@@ -93,6 +135,7 @@ const TaskBoard: React.FC = () => {
       {/* Task creation form */}
       <div className="glass-panel" style={{ marginBottom: '1.5rem' }}>
         <h3>Add Task</h3>
+
         {message && (
           <div style={{
             padding: '0.6rem 1rem', marginBottom: '1rem', borderRadius: '8px', fontSize: '0.875rem',
@@ -103,20 +146,55 @@ const TaskBoard: React.FC = () => {
             {message.text}
           </div>
         )}
-        <form onSubmit={handleCreateTask} style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <input type="text" placeholder="Task title" value={title}
-            onChange={(e) => setTitle(e.target.value)} required disabled={submitting}
-            style={{ flex: 2, marginBottom: 0 }} />
-          <input type="text" placeholder="Description (optional)" value={description}
-            onChange={(e) => setDescription(e.target.value)} disabled={submitting}
-            style={{ flex: 3, marginBottom: 0 }} />
-          <button type="submit" className="btn" disabled={submitting}>
+
+        <form onSubmit={handleCreateTask}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+            <input type="text" placeholder="Task title" value={title}
+              onChange={(e) => setTitle(e.target.value)} required disabled={submitting}
+              style={{ flex: 2, marginBottom: 0 }} />
+            <input type="text" placeholder="Description (optional)" value={description}
+              onChange={(e) => setDescription(e.target.value)} disabled={submitting}
+              style={{ flex: 3, marginBottom: 0 }} />
+          </div>
+
+          {/* Team and assignee selection */}
+          {teams.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              {/* Team selector */}
+              <select
+                value={selectedTeamId ?? ''}
+                onChange={(e) => handleTeamChange(e.target.value ? Number(e.target.value) : null)}
+                style={{ flex: 1, marginBottom: 0 }}
+              >
+                <option value="">No team</option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+
+              {/* Assignee selector — only shows when a team is selected */}
+              {selectedTeamId && (
+                <select
+                  value={assignedTo ?? ''}
+                  onChange={(e) => setAssignedTo(e.target.value ? Number(e.target.value) : null)}
+                  style={{ flex: 1, marginBottom: 0 }}
+                >
+                  <option value="">Unassigned</option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          <button type="submit" className="btn" style={{ width: '100%' }} disabled={submitting}>
             {submitting ? 'Adding...' : 'Add Task'}
           </button>
         </form>
       </div>
 
-      {/* Kanban board — three columns */}
+      {/* Kanban board */}
       {loading ? (
         <p className="text-muted">Loading tasks...</p>
       ) : (
@@ -128,7 +206,6 @@ const TaskBoard: React.FC = () => {
               padding: '1rem',
               minHeight: '200px',
             }}>
-              {/* Column header */}
               <div className="flex-between" style={{ marginBottom: '1rem' }}>
                 <strong>{status}</strong>
                 <span className="badge" style={{ backgroundColor: columnBadgeColors[status].bg, color: columnBadgeColors[status].color }}>
@@ -136,7 +213,6 @@ const TaskBoard: React.FC = () => {
                 </span>
               </div>
 
-              {/* Task cards in this column */}
               {getTasksByStatus(status).length === 0 ? (
                 <p className="text-muted" style={{ fontSize: '0.8rem' }}>No tasks</p>
               ) : (
@@ -150,14 +226,13 @@ const TaskBoard: React.FC = () => {
                       </p>
                     )}
 
-                    {/* Show assigned user if set */}
+                    {/* Show assigned user */}
                     {task.assigned_to_name && (
                       <p style={{ fontSize: '0.75rem', color: '#a5b4fc', margin: '0.25rem 0' }}>
                         👤 {task.assigned_to_name}
                       </p>
                     )}
 
-                    {/* Move to other columns */}
                     <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
                       {STATUSES.filter((s) => s !== status).map((s) => (
                         <button key={s} className="btn"
